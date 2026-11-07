@@ -1,0 +1,1037 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+        name="description"
+        content="StreetX — an urban-inspired demo catalog powered by FakeStoreAPI."
+    >
+    <title>StreetX | Urban Street Style</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+<a class="skip-link" href="#catalog">Skip to products</a>
+
+<div class="announcement">
+    INDEPENDENT STYLE. EVERYDAY ENERGY.
+    <span>FAKESTORE DEMO / USD</span>
+</div>
+
+<header class="header">
+    <div class="shell header-inner">
+        <a
+            class="brand"
+            href="{% url 'products' %}"
+            aria-label="StreetX home"
+        >
+            Street<span>X</span>
+        </a>
+
+        <nav aria-label="Main navigation">
+            <a class="home-link" href="{% url 'products' %}">Home</a>
+
+            {% for category in categories %}
+                <a
+                    href="#catalog"
+                    data-category-link="{{ category.key }}"
+                >
+                    {{ category.label }}
+                </a>
+            {% endfor %}
+        </nav>
+
+        <div class="header-actions" data-js hidden>
+            <button
+                type="button"
+                id="search-shortcut"
+                class="icon-button"
+                aria-label="Search products"
+            >
+                ⌕
+            </button>
+
+            <button
+                type="button"
+                id="wishlist-toggle"
+                class="icon-button"
+                aria-label="Show saved products"
+                aria-pressed="false"
+            >
+                ♡ <span id="saved-count">0</span>
+            </button>
+
+            <button type="button" id="bag-open" class="bag-button">
+                Bag <span id="bag-count">0</span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="hero shell" aria-labelledby="hero-title">
+        <div class="hero-art" aria-hidden="true"></div>
+
+        <div class="hero-copy">
+            <p class="eyebrow">
+                <span></span>
+                YOUR STYLE. YOUR RULES.
+            </p>
+
+            <h1 id="hero-title">
+                URBAN<br>STREET<br><em>STYLE.</em>
+            </h1>
+
+            <p>
+                Everyday pieces. Standout details.<br>
+                Find your own expression.
+            </p>
+
+            <a class="button primary" href="#catalog">
+                Explore the collection
+                <span aria-hidden="true">↗</span>
+            </a>
+
+            <small class="art-caption">
+                Campaign artwork · outfits shown are illustrative.
+            </small>
+        </div>
+
+        <div class="hero-stamp" aria-hidden="true">
+            OWN<br>
+            <strong>YOUR</strong><br>
+            EVERYDAY ↗
+        </div>
+
+        <div class="hero-bottom">
+            <span>STREETX / STYLE WITHOUT LIMITS</span>
+            <span>01 — THE COLLECTION</span>
+        </div>
+    </section>
+
+    <section class="shell categories" aria-label="Shop by category">
+        {% for category in categories %}
+            <a
+                href="#catalog"
+                class="category-tile"
+                data-category-link="{{ category.key }}"
+            >
+                <div>
+                    <h2>{{ category.label }}</h2>
+                    <p>{{ category.subtitle }}</p>
+                    <span class="circle-arrow" aria-hidden="true">↗</span>
+                </div>
+
+                {% if category.image %}
+                    <img
+                        src="{{ category.image }}"
+                        alt=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer"
+                        data-fallback="{{ placeholder }}"
+                    >
+                {% endif %}
+            </a>
+        {% endfor %}
+    </section>
+
+    <section
+        class="shell catalog"
+        id="catalog"
+        aria-labelledby="catalog-title"
+    >
+        <div class="section-heading">
+            <h2 id="catalog-title">Featured <em>Drops</em></h2>
+            <span class="heading-rule"></span>
+
+            <a href="{% url 'products' %}#catalog" id="view-all">
+                View all products ↗
+            </a>
+        </div>
+
+        <p class="catalog-note">
+            Real catalog prices in USD.
+            A demo storefront — no payments or orders.
+        </p>
+
+        {% if catalog_error %}
+            <div class="notice" role="alert">
+                {{ catalog_error }}
+                <a href="{% url 'products' %}">Try again</a>
+            </div>
+        {% endif %}
+
+        {% if catalog_stale %}
+            <div class="notice" role="status">
+                Showing a recently saved catalog while the API is unavailable.
+                Prices may have changed.
+            </div>
+        {% endif %}
+
+        <noscript>
+            <p class="notice">
+                Enable JavaScript for search, filtering, product details,
+                saved items, and the demo bag.
+                The catalog remains readable below.
+            </p>
+        </noscript>
+
+        <form
+            class="toolbar"
+            id="filters"
+            data-js
+            hidden
+            role="search"
+        >
+            <label class="search-field">
+                <span>Search</span>
+                <input
+                    type="search"
+                    id="search"
+                    placeholder="Find your next favorite…"
+                    maxlength="200"
+                    autocomplete="off"
+                >
+            </label>
+
+            <label>
+                Category
+                <select id="category">
+                    <option value="">All categories</option>
+
+                    {% for category in categories %}
+                        <option value="{{ category.key }}">
+                            {{ category.label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label>
+                Sort by
+                <select id="sort">
+                    <option value="featured">Featured</option>
+                    <option value="price-low">Price: low to high</option>
+                    <option value="price-high">Price: high to low</option>
+                    <option value="name">Name: A–Z</option>
+                </select>
+            </label>
+
+            <button type="reset" class="button subtle">Reset</button>
+        </form>
+
+        <p
+            class="result-count"
+            id="result-count"
+            aria-live="polite"
+            aria-atomic="true"
+        >
+            {{ products|length }} products
+        </p>
+
+        <div class="product-grid" id="product-grid">
+            {% for product in products %}
+                <article class="product-card" data-id="{{ product.id }}">
+                    <div class="product-image">
+                        <img
+                            src="{% if product.image %}{{ product.image }}{% else %}{{ placeholder }}{% endif %}"
+                            alt="{{ product.title }}"
+                            loading="lazy"
+                            width="400"
+                            height="400"
+                            referrerpolicy="no-referrer"
+                            data-fallback="{{ placeholder }}"
+                        >
+
+                        <button
+                            type="button"
+                            class="save-button"
+                            data-action="save"
+                            data-js
+                            hidden
+                            aria-pressed="false"
+                            aria-label="Save {{ product.title }}"
+                        >
+                            ♡
+                        </button>
+                    </div>
+
+                    <div class="product-info">
+                        <p class="category-label">
+                            {{ product.category_label }}
+                        </p>
+
+                        <h3>{{ product.title }}</h3>
+
+                        <p class="rating">
+                            ★ <span>{{ product.rating_text }}</span>
+                        </p>
+
+                        <div class="product-bottom">
+                            <strong>{{ product.price_display }}</strong>
+
+                            <button
+                                type="button"
+                                class="detail-button"
+                                data-action="detail"
+                                data-js
+                                hidden
+                            >
+                                View ↗
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            {% empty %}
+                <p class="notice">
+                    No products are available right now.
+                </p>
+            {% endfor %}
+        </div>
+
+        <div class="notice" id="no-results" hidden>
+            <h3>No matches this time.</h3>
+            <p>Try another search or reset your filters.</p>
+
+            <button
+                type="button"
+                id="reset-empty"
+                class="button subtle"
+            >
+                Reset filters
+            </button>
+        </div>
+    </section>
+
+    <section class="shell closing">
+        <p>MAKE IT<br><em>YOUR OWN.</em></p>
+
+        <span>
+            A little attitude.<br>
+            A lot of possibility.
+        </span>
+
+        <a href="#catalog" class="button primary">Find your style ↗</a>
+    </section>
+</main>
+
+<footer class="shell footer">
+    <a class="brand" href="{% url 'products' %}">
+        Street<span>X</span>
+    </a>
+
+    <p>
+        Demo catalog powered by FakeStoreAPI.<br>
+        Bag and saved items stay in this browser when storage is available.
+    </p>
+
+    <p>No real checkout. No orders. No payments.</p>
+</footer>
+
+<dialog
+    id="detail-dialog"
+    class="detail-dialog"
+    aria-labelledby="detail-title"
+>
+    <button
+        type="button"
+        class="dialog-close"
+        data-close
+        aria-label="Close product details"
+    >
+        ✕
+    </button>
+
+    <div class="detail-layout">
+        <img
+            id="detail-image"
+            alt=""
+            referrerpolicy="no-referrer"
+            data-fallback="{{ placeholder }}"
+        >
+
+        <div>
+            <p id="detail-category" class="category-label"></p>
+            <h2 id="detail-title"></h2>
+            <p id="detail-rating" class="rating"></p>
+            <strong id="detail-price" class="detail-price"></strong>
+            <p id="detail-description"></p>
+
+            <button
+                type="button"
+                id="detail-add"
+                class="button primary"
+            >
+                Add to demo bag +
+            </button>
+
+            <p class="fine-print">
+                Demo only. Availability and fulfillment are not provided.
+            </p>
+        </div>
+    </div>
+</dialog>
+
+<dialog id="bag-dialog" aria-labelledby="bag-title">
+    <button
+        type="button"
+        class="dialog-close"
+        data-close
+        aria-label="Close demo bag"
+    >
+        ✕
+    </button>
+
+    <p class="eyebrow">YOUR EDIT</p>
+    <h2 id="bag-title">Demo bag</h2>
+
+    <p class="fine-print">
+        No orders or payments.
+        Quantities are illustrative, not stock reservations.
+    </p>
+
+    <div id="bag-items"></div>
+
+    <div class="bag-total">
+        <span>Product subtotal (USD)</span>
+        <strong id="bag-total">$0.00</strong>
+    </div>
+
+    <p class="fine-print">Shipping and tax are not calculated.</p>
+
+    <button
+        type="button"
+        id="demo-checkout"
+        class="button primary"
+    >
+        About demo checkout ↗
+    </button>
+
+    <p id="checkout-message" role="status"></p>
+</dialog>
+
+<p
+    class="toast"
+    id="toast"
+    role="status"
+    aria-live="polite"
+></p>
+
+{{ products|json_script:"catalog-data" }}
+
+<script>
+(() => {
+    "use strict";
+
+    const $ = (id) => document.getElementById(id);
+    const products = JSON.parse($("catalog-data").textContent);
+    const catalog = new Map(products.map((product) => [product.id, product]));
+    const cards = [...document.querySelectorAll(".product-card")];
+    const fallback = $("detail-image").dataset.fallback;
+
+    const money = (cents) => new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD"
+    }).format(cents / 100);
+
+    let storageAvailable = true;
+
+    function read(key) {
+        try {
+            return JSON.parse(localStorage.getItem(key) || "null");
+        } catch {
+            storageAvailable = false;
+            return null;
+        }
+    }
+
+    const savedRaw = read("streetx:saved:v1");
+    const bagRaw = read("streetx:bag:v1");
+
+    const saved = new Set(
+        (Array.isArray(savedRaw) ? savedRaw : [])
+            .filter((id) => Number.isSafeInteger(id) && id > 0)
+            .slice(0, 100)
+    );
+
+    const bag = new Map();
+
+    if (Array.isArray(bagRaw)) {
+        bagRaw.slice(0, 100).forEach((row) => {
+            if (
+                Array.isArray(row)
+                && row.length === 2
+                && Number.isSafeInteger(row[0])
+                && row[0] > 0
+                && Number.isInteger(row[1])
+                && row[1] > 0
+                && row[1] <= 99
+            ) {
+                bag.set(row[0], row[1]);
+            }
+        });
+    }
+
+    // Preserve stored IDs through outages.
+    // Only current catalog products are displayed or included in totals.
+    const activeSaved = () => [...saved].filter((id) => catalog.has(id));
+    const activeBag = () => [...bag].filter(([id]) => catalog.has(id));
+
+    function persist() {
+        try {
+            localStorage.setItem(
+                "streetx:saved:v1",
+                JSON.stringify([...saved])
+            );
+
+            localStorage.setItem(
+                "streetx:bag:v1",
+                JSON.stringify([...bag])
+            );
+        } catch {
+            storageAvailable = false;
+        }
+    }
+
+    let timer;
+    let savedOnly = false;
+    let currentId = null;
+
+    function announce(message) {
+        clearTimeout(timer);
+        $("toast").textContent = message;
+
+        timer = setTimeout(() => {
+            $("toast").textContent = "";
+        }, 4000);
+    }
+
+    function imageFallback(image) {
+        if (image.dataset.failed) return;
+
+        image.dataset.failed = "true";
+        image.src = image.dataset.fallback || fallback;
+    }
+
+    document.addEventListener("error", (event) => {
+        if (event.target instanceof HTMLImageElement) {
+            imageFallback(event.target);
+        }
+    }, true);
+
+    document.querySelectorAll("img").forEach((image) => {
+        if (image.complete && image.naturalWidth === 0) {
+            imageFallback(image);
+        }
+    });
+
+    function updateCounts() {
+        $("saved-count").textContent = activeSaved().length;
+
+        $("bag-count").textContent = activeBag().reduce(
+            (sum, [, quantity]) => sum + quantity,
+            0
+        );
+
+        cards.forEach((card) => {
+            const product = catalog.get(Number(card.dataset.id));
+            const button = card.querySelector('[data-action="save"]');
+            const selected = saved.has(product.id);
+
+            button.setAttribute("aria-pressed", String(selected));
+            button.setAttribute(
+                "aria-label",
+                `${selected ? "Unsave" : "Save"} ${product.title}`
+            );
+            button.textContent = selected ? "♥" : "♡";
+        });
+    }
+
+    function filter() {
+        const query = $("search").value.trim().toLocaleLowerCase();
+        const category = $("category").value;
+        const order = $("sort").value;
+
+        const sorted = [...cards].sort((a, b) => {
+            const x = catalog.get(Number(a.dataset.id));
+            const y = catalog.get(Number(b.dataset.id));
+
+            if (order === "price-low") {
+                return x.price_cents - y.price_cents;
+            }
+
+            if (order === "price-high") {
+                return y.price_cents - x.price_cents;
+            }
+
+            if (order === "name") {
+                return x.title.localeCompare(y.title);
+            }
+
+            return cards.indexOf(a) - cards.indexOf(b);
+        });
+
+        let count = 0;
+
+        sorted.forEach((card) => {
+            const product = catalog.get(Number(card.dataset.id));
+
+            const searchable = [
+                product.title,
+                product.category_label,
+                product.description
+            ].join(" ").toLocaleLowerCase();
+
+            const match = (
+                (!category || product.category === category)
+                && (!savedOnly || saved.has(product.id))
+                && searchable.includes(query)
+            );
+
+            card.hidden = !match;
+
+            if (match) count++;
+
+            $("product-grid").append(card);
+        });
+
+        $("result-count").textContent = (
+            `${count} ${count === 1 ? "product" : "products"}`
+            + (savedOnly ? " · Saved items" : "")
+        );
+
+        $("no-results").hidden = count > 0 || products.length === 0;
+
+        $("wishlist-toggle").setAttribute(
+            "aria-pressed",
+            String(savedOnly)
+        );
+
+        $("wishlist-toggle").setAttribute(
+            "aria-label",
+            savedOnly ? "Show all products" : "Show saved products"
+        );
+    }
+
+    function reset() {
+        $("search").value = "";
+        $("category").value = "";
+        $("sort").value = "featured";
+        savedOnly = false;
+        filter();
+    }
+
+    $("filters").addEventListener("submit", (event) => {
+        event.preventDefault();
+    });
+
+    $("filters").addEventListener("reset", (event) => {
+        event.preventDefault();
+        reset();
+    });
+
+    $("search").addEventListener("input", filter);
+    $("category").addEventListener("change", filter);
+    $("sort").addEventListener("change", filter);
+    $("reset-empty").addEventListener("click", reset);
+
+    $("view-all").addEventListener("click", (event) => {
+        event.preventDefault();
+        reset();
+        $("catalog").scrollIntoView();
+    });
+
+    document.querySelectorAll("[data-category-link]").forEach((link) => {
+        link.addEventListener("click", () => {
+            $("category").value = link.dataset.categoryLink;
+            $("search").value = "";
+            savedOnly = false;
+            filter();
+        });
+    });
+
+    $("search-shortcut").addEventListener("click", () => {
+        $("catalog").scrollIntoView();
+        $("search").focus({ preventScroll: true });
+    });
+
+    $("wishlist-toggle").addEventListener("click", () => {
+        savedOnly = !savedOnly;
+        filter();
+        $("catalog").scrollIntoView();
+    });
+
+    let opener = null;
+
+    function openDialog(dialog) {
+        opener = document.activeElement;
+        dialog.showModal();
+    }
+
+    document.querySelectorAll("dialog").forEach((dialog) => {
+        dialog.querySelector("[data-close]").addEventListener("click", () => {
+            dialog.close();
+        });
+
+        dialog.addEventListener("close", () => {
+            if (opener && document.contains(opener)) {
+                opener.focus();
+            }
+        });
+    });
+
+    function showProduct(id) {
+        const product = catalog.get(id);
+
+        if (!product) return;
+
+        currentId = id;
+
+        $("detail-title").textContent = product.title;
+        $("detail-category").textContent = product.category_label;
+        $("detail-rating").textContent = `★ ${product.rating_text}`;
+        $("detail-price").textContent = money(product.price_cents);
+        $("detail-description").textContent = (
+            product.description || "No description provided."
+        );
+
+        const image = $("detail-image");
+        delete image.dataset.failed;
+        image.alt = product.title;
+        image.src = product.image || fallback;
+
+        openDialog($("detail-dialog"));
+    }
+
+    $("product-grid").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-action]");
+
+        if (!button) return;
+
+        const id = Number(
+            button.closest(".product-card").dataset.id
+        );
+
+        if (button.dataset.action === "detail") {
+            showProduct(id);
+            return;
+        }
+
+        if (saved.has(id)) {
+            saved.delete(id);
+            announce("Removed from saved items.");
+        } else {
+            saved.add(id);
+            announce("Saved to your edit.");
+        }
+
+        persist();
+        updateCounts();
+        filter();
+
+        if (!storageAvailable) {
+            announce(
+                "Saved for this visit only — browser storage is unavailable."
+            );
+        }
+    });
+
+    function addToBag(id) {
+        if (!catalog.has(id)) return;
+
+        const quantity = bag.get(id) || 0;
+
+        if (quantity >= 99) {
+            announce("Demo limit: 99 per item.");
+            return;
+        }
+
+        bag.set(id, quantity + 1);
+
+        persist();
+        updateCounts();
+
+        announce(
+            storageAvailable
+                ? "Added to your demo bag."
+                : "Added for this visit only — browser storage is unavailable."
+        );
+
+        $("detail-add").textContent = "Added to demo bag · Add another +";
+    }
+
+    $("detail-add").addEventListener("click", () => {
+        addToBag(currentId);
+    });
+
+    $("detail-dialog").addEventListener("close", () => {
+        $("detail-add").textContent = "Add to demo bag +";
+    });
+
+    function element(tag, text, className) {
+        const node = document.createElement(tag);
+
+        if (text !== undefined) {
+            node.textContent = text;
+        }
+
+        if (className) {
+            node.className = className;
+        }
+
+        return node;
+    }
+
+    function renderBag(focusKey) {
+        const container = $("bag-items");
+        container.replaceChildren();
+
+        const items = activeBag();
+
+        if (!items.length) {
+            container.append(
+                element(
+                    "p",
+                    "Your demo bag is empty. Explore the collection to add something.",
+                    "notice"
+                )
+            );
+        }
+
+        items.forEach(([id, quantity]) => {
+            const product = catalog.get(id);
+            const row = element("div", undefined, "bag-row");
+            const image = element("img");
+
+            image.src = product.image || fallback;
+            image.alt = "";
+            image.referrerPolicy = "no-referrer";
+
+            const info = element("div");
+
+            info.append(
+                element("h3", product.title),
+                element(
+                    "p",
+                    `${money(product.price_cents)} each · `
+                    + money(product.price_cents * quantity)
+                )
+            );
+
+            const controls = element(
+                "div",
+                undefined,
+                "quantity-controls"
+            );
+
+            function makeButton(label, action, text) {
+                const button = element("button", text);
+                button.type = "button";
+
+                button.setAttribute(
+                    "aria-label",
+                    `${label} ${product.title}`
+                );
+
+                button.dataset.focusKey = `${id}-${action}`;
+
+                button.addEventListener("click", () => {
+                    if (
+                        action === "remove"
+                        || (action === "minus" && quantity === 1)
+                    ) {
+                        bag.delete(id);
+                    } else {
+                        bag.set(
+                            id,
+                            quantity + (action === "plus" ? 1 : -1)
+                        );
+                    }
+
+                    persist();
+                    updateCounts();
+                    renderBag(`${id}-${action}`);
+                });
+
+                return button;
+            }
+
+            const minus = makeButton(
+                "Decrease quantity of",
+                "minus",
+                "−"
+            );
+
+            const plus = makeButton(
+                "Increase quantity of",
+                "plus",
+                "+"
+            );
+
+            plus.disabled = quantity >= 99;
+
+            const count = element("span", String(quantity));
+
+            count.setAttribute(
+                "aria-label",
+                `Quantity ${quantity}`
+            );
+
+            const remove = makeButton(
+                "Remove",
+                "remove",
+                "Remove"
+            );
+
+            remove.className = "remove";
+
+            controls.append(minus, count, plus, remove);
+            info.append(controls);
+            row.append(image, info);
+            container.append(row);
+        });
+
+        const subtotal = items.reduce(
+            (sum, [id, quantity]) => (
+                sum + catalog.get(id).price_cents * quantity
+            ),
+            0
+        );
+
+        $("bag-total").textContent = money(subtotal);
+
+        if (focusKey) {
+            const next = [...container.querySelectorAll("button")]
+                .find((button) => (
+                    button.dataset.focusKey === focusKey
+                    && !button.disabled
+                ));
+
+            (
+                next
+                || container.querySelector("button")
+                || $("demo-checkout")
+            ).focus();
+        }
+
+        if ([...bag.keys()].some((id) => !catalog.has(id))) {
+            container.append(
+                element(
+                    "p",
+                    "Some saved bag items are absent from this catalog "
+                    + "and are excluded from the subtotal.",
+                    "fine-print"
+                )
+            );
+        }
+    }
+
+    $("bag-open").addEventListener("click", () => {
+        renderBag();
+        $("checkout-message").textContent = "";
+        openDialog($("bag-dialog"));
+    });
+
+    $("demo-checkout").addEventListener("click", () => {
+        $("checkout-message").textContent = (
+            "This is a demo bag. No order was placed and no payment "
+            + "was taken. Real checkout is not connected."
+        );
+    });
+
+    updateCounts();
+    filter();
+
+    document.querySelectorAll("[data-js]").forEach((node) => {
+        node.hidden = false;
+    });
+})();
+</script>
+<!-- Scroll-to-top button -->
+<button
+    type="button"
+    id="back-to-top"
+    class="back-to-top"
+    aria-label="Scroll to top"
+    hidden
+>
+    <span aria-hidden="true">↑</span>
+</button>
+
+<script>
+(() => {
+    const button = document.getElementById("back-to-top");
+
+    if (!button) return;
+
+    let reachedEnd = false;
+    let framePending = false;
+
+    function updateVisibility() {
+        framePending = false;
+
+        const page = document.scrollingElement
+            || document.documentElement;
+
+        const scrollTop = page.scrollTop;
+        const distanceFromBottom =
+            page.scrollHeight - window.innerHeight - scrollTop;
+
+        // Activate when the visitor is within 200px of the bottom.
+        if (scrollTop > 100 && distanceFromBottom <= 200) {
+            reachedEnd = true;
+        }
+
+        // Hide again after returning to the top.
+        if (scrollTop <= 100) {
+            reachedEnd = false;
+        }
+
+        button.hidden = !reachedEnd;
+    }
+
+    function scheduleUpdate() {
+        if (framePending) return;
+
+        framePending = true;
+        requestAnimationFrame(updateVisibility);
+    }
+
+    window.addEventListener(
+        "scroll",
+        scheduleUpdate,
+        { passive: true }
+    );
+
+    window.addEventListener("resize", scheduleUpdate);
+    window.addEventListener("pageshow", scheduleUpdate);
+
+    // Recheck when images finish loading and change the page height.
+    document.addEventListener("load", scheduleUpdate, true);
+
+    button.addEventListener("click", () => {
+        const homeLink = document.querySelector(".header .brand");
+
+        if (homeLink) {
+            homeLink.focus({ preventScroll: true });
+        }
+
+        const reduceMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+        window.scrollTo({
+            top: 0,
+            behavior: reduceMotion ? "instant" : "smooth"
+        });
+    });
+
+    updateVisibility();
+})();
+</script>
+
+</body>
+</html>
